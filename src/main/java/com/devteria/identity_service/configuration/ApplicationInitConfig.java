@@ -23,9 +23,11 @@ import java.util.Set;
 public class ApplicationInitConfig {
     PasswordEncoder passwordEncoder;
 
+    //Khởi tạo user Admin
     @Bean
     ApplicationRunner applicationRunner(UserRepository userRepository) {
         return args -> {
+            // Nếu ứng dụng lần đầu khởi động, chưa có admin thì tạo mới 1 admin
             if (userRepository.findByUsername("admin").isEmpty()) {
                 Set<String> roles = new HashSet<String>();
                 roles.add(Role.ADMIN.name());

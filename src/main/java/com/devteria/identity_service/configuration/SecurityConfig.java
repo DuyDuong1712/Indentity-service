@@ -32,10 +32,13 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity.csrf(AbstractHttpConfigurer::disable); //Tat CSRF. JWT đã cung cấp cơ chế xác thực riêng và không phụ thuộc vào session hoặc cookie (nơi CSRF thường được áp dụng).
+
         httpSecurity.authorizeHttpRequests(requests ->
                 requests.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+//                        .requestMatchers(HttpMethod.GET, "/users").hasAuthority("SCOPE_ADMIN")
 //                        .requestMatchers(HttpMethod.GET, "/users").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/users").hasRole(Role.ADMIN.name())
+//                        .requestMatchers(HttpMethod.GET, "/users").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated() // Tất cả request phải đc authenticated mới đc access
         );
 
@@ -43,11 +46,10 @@ public class SecurityConfig {
         httpSecurity.oauth2ResourceServer(
                 oauth2 -> oauth2.jwt(
                         jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder())
-                                                                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+                                                                        .jwtAuthenticationConverter(jwtAuthenticationConverter())) //chuyển JWT thành đối tượng Authentication
+                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint()) //Khi có lỗi xác thực (ví dụ token sai, hết hạn), Spring sẽ gọi JwtAuthenticationEntryPoint để xử lý.
         );
 
-        httpSecurity.csrf(AbstractHttpConfigurer::disable); //Tat CSRF. JWT đã cung cấp cơ chế xác thực riêng và không phụ thuộc vào session hoặc cookie (nơi CSRF thường được áp dụng).
 
         return httpSecurity.build();
     }

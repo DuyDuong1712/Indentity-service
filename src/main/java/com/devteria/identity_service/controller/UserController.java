@@ -44,33 +44,41 @@ public class UserController {
                 .build();
     }
 
-    @GetMapping()
+    //Lấy danh sách tất cả người dùng (chỉ ADMIN được phép)
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping()
     public ApiResponse<List<UserResponse>> getAllUsers() {
         // Lấy thông tin đang ddang nhập hiện tại
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        log.info("username: {}", authentication.getName());
-        authentication.getAuthorities().stream().forEach(grantedAuthority -> log.info(grantedAuthority.getAuthority()));
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//
+//        log.info("username: {}", authentication.getName());
+//        authentication.getAuthorities().stream().forEach(grantedAuthority -> log.info(grantedAuthority.getAuthority()));
 
         return ApiResponse.<List<UserResponse>>builder()
                 .result(userService.getAllUsers())
                 .build();
     }
 
+    //Lấy thông tin người dùng theo ID (chỉ ADMIN hoặc chính người dùng đó)
+    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.id")
     @GetMapping("/{userId}")
-    @PostAuthorize("returnObject.username == authentication.name or hasRole('ADMIN')")
     public ApiResponse<UserResponse> getUserById(@PathVariable("userId") String userId) {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.getUserById(userId))
                 .build();
     }
 
+    // Cập nhật thông tin người dùng (chỉ ADMIN hoặc chính người dùng, kiểm tra tham số)
+    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.id")
     @PutMapping("/{userId}")
     public UserResponse updateUser(@PathVariable String userId, @RequestBody UserUpdateRequest request) {
         return userService.updateUser(userId, request);
     }
 
+//    // 4. Xóa người dùng (chỉ ADMIN, sử dụng bean để kiểm tra logic phức tạp)
+//    @PreAuthorize("@userSecurityService.canDeleteUser(#id, authentication)")
+    // 4. Xóa người dùng (chỉ ADMIN)
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{userId}")
     public String deleteUser(@PathVariable String userId) {
         userService.deleteUser(userId);

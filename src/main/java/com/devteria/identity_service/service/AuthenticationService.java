@@ -44,6 +44,7 @@ public class AuthenticationService {
 
 //    protected static final String SIGNER_KEY = "eDvTlohzG6dHiJU9GdHzVGBq3T9b/UaLG9yqif0EuejdhEFOCuV4YHBIQjSNLG5Z";
 
+    // Xác thực người dùng
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         User user = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS) );
 
@@ -54,6 +55,7 @@ public class AuthenticationService {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
+        // Tạo JWT token
         String token = generateToken(user);
 
         return AuthenticationResponse.builder()
@@ -62,6 +64,7 @@ public class AuthenticationService {
                 .build();
     }
 
+    //Xác thực token:  kiểm tra xem token có hợp lệ và còn hạn hay không.
     public IntrospectReponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         String token = request.getToken();
 
@@ -79,6 +82,7 @@ public class AuthenticationService {
     }
 
 
+    //JwtService nên nằm ở JwtService
     private String generateToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
@@ -94,15 +98,17 @@ public class AuthenticationService {
 
         JWSObject jwsObject = new JWSObject(header, payload);
 
+        //Ký token
         try {
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
+            return jwsObject.serialize();
         } catch (JOSEException e) {
             log.error("Cant create Token", e);
             throw new RuntimeException(e);
         }
-        return jwsObject.serialize();
     }
 
+    //JwtService
     private String buildScope(User user) {
         StringJoiner joiner = new StringJoiner(" ");
         if (!CollectionUtils.isEmpty(user.getRoles())) {
