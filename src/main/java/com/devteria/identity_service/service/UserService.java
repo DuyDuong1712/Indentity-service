@@ -3,20 +3,19 @@ package com.devteria.identity_service.service;
 import com.devteria.identity_service.dto.reponse.UserResponse;
 import com.devteria.identity_service.dto.request.UserCreationRequest;
 import com.devteria.identity_service.dto.request.UserUpdateRequest;
-import com.devteria.identity_service.entity.User;
+import com.devteria.identity_service.entity.RoleEntity;
+import com.devteria.identity_service.entity.UserEntity;
 import com.devteria.identity_service.enums.Role;
 import com.devteria.identity_service.exception.AppException;
 import com.devteria.identity_service.exception.ErrorCode;
 import com.devteria.identity_service.mapper.UserMapper;
+import com.devteria.identity_service.repository.RoleRepository;
 import com.devteria.identity_service.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,24 +28,26 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
     UserRepository userRepository;
+    RoleRepository roleRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
 
-    public User createUser(UserCreationRequest request) {
+    public UserResponse createUser(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTS);
         }
 
-        User user = userMapper.toUser(request);
+        UserEntity userEntity = userMapper.toUser(request);
 //        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        Set<String> roles = new HashSet<>();
-        roles.add(Role.USER.name());
+        Set<RoleEntity> roles = new HashSet<>();
+        roles.add(roleRepository.findById(Role.USER.name()).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTS)));
 
-        user.setRoles(roles);
+        userEntity.setRoles(roles);
 
-        return userRepository.save(user);
+        UserEntity user = userRepository.save(userEntity);
+        return userMapper.toUserResponse(user);
     }
 
 
@@ -55,8 +56,8 @@ public class UserService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName(); // Lấy username
 
-        User user =  userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
-        return userMapper.toUserResponse(user);
+        UserEntity userEntity =  userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+        return userMapper.toUserResponse(userEntity);
     }
 
 
@@ -65,17 +66,21 @@ public class UserService {
     }
 
     public UserResponse getUserById(String id) {
-        User user =  userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+        UserEntity userEntity =  userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
 
-        return userMapper.toUserResponse(user);
+        return userMapper.toUserResponse(userEntity);
     }
 
     public UserResponse updateUser(String id, UserUpdateRequest request) {
-        User user = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+        UserEntity userEntity = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
 
-        userMapper.updateUser(user, request);
+        userMapper.updateUser(userEntity, request);
+        userEntity.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        return userMapper.toUserResponse(userRepository.save(user));
+        List<RoleEntity> roles = roleRepository.findAllById(request.getRoles());
+        userEntity.setRoles(new HashSet<>(roles));
+
+        return userMapper.toUserResponse(userRepository.save(userEntity));
     }
 
     public void deleteUser(String id) {
