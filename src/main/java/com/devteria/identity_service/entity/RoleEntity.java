@@ -1,11 +1,12 @@
 package com.devteria.identity_service.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
 import java.util.HashSet;
 import java.util.Set;
+
+import jakarta.persistence.*;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "role")
@@ -18,16 +19,17 @@ import java.util.Set;
 public class RoleEntity {
     @Id
     String code;
+
     String description;
 
     @ManyToMany
     @JoinTable(
-            name = "role_permission", //tên bảng trung gian
+            name = "role_permission", // tên bảng trung gian
             joinColumns = @JoinColumn(name = "role_code"),
-            inverseJoinColumns = @JoinColumn(name = "permission_code")
-    )
+            inverseJoinColumns = @JoinColumn(name = "permission_code"))
     Set<PermissionEntity> permissions = new HashSet<>();
 
     @ManyToMany(mappedBy = "roles")
+    //    @JsonIgnore
     Set<UserEntity> users = new HashSet<>();
 }

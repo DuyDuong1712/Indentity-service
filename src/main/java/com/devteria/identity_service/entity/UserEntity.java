@@ -1,13 +1,13 @@
 package com.devteria.identity_service.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.*;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "user")
@@ -21,6 +21,7 @@ public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
+
     String username;
     String password;
     String firstName;
@@ -31,7 +32,6 @@ public class UserEntity {
     @JoinTable(
             name = "user_role",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_code")
-    )
+            inverseJoinColumns = @JoinColumn(name = "role_code"))
     Set<RoleEntity> roles = new HashSet<>();
 }

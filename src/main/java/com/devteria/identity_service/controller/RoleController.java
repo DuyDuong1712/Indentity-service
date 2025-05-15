@@ -1,20 +1,17 @@
 package com.devteria.identity_service.controller;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.*;
+
 import com.devteria.identity_service.dto.reponse.ApiResponse;
-import com.devteria.identity_service.dto.reponse.PermissionReponse;
 import com.devteria.identity_service.dto.reponse.RoleReponse;
-import com.devteria.identity_service.dto.reponse.UserResponse;
-import com.devteria.identity_service.dto.request.PermissionRequest;
 import com.devteria.identity_service.dto.request.RoleRequest;
-import com.devteria.identity_service.dto.request.UserUpdateRequest;
-import com.devteria.identity_service.service.PermissionService;
 import com.devteria.identity_service.service.RoleService;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/roles")
@@ -43,6 +40,3 @@ public class RoleController {
         return ApiResponse.builder().build();
     }
 }
-
-
-

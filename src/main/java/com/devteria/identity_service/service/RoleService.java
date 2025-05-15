@@ -1,5 +1,11 @@
 package com.devteria.identity_service.service;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.devteria.identity_service.dto.reponse.RoleReponse;
 import com.devteria.identity_service.dto.request.RoleRequest;
 import com.devteria.identity_service.entity.PermissionEntity;
@@ -7,16 +13,10 @@ import com.devteria.identity_service.entity.RoleEntity;
 import com.devteria.identity_service.mapper.RoleMapper;
 import com.devteria.identity_service.repository.PermissionRepository;
 import com.devteria.identity_service.repository.RoleRepository;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,5 +45,4 @@ public class RoleService {
     public void deleteRole(String id) {
         roleRepository.deleteById(id);
     }
-
 }

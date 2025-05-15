@@ -1,11 +1,12 @@
 package com.devteria.identity_service.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
 import java.util.HashSet;
 import java.util.Set;
+
+import jakarta.persistence.*;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "permission")
@@ -18,8 +19,10 @@ import java.util.Set;
 public class PermissionEntity {
     @Id
     String code;
+
     String description;
 
     @ManyToMany(mappedBy = "permissions")
+    //    @JsonIgnore
     Set<RoleEntity> roles = new HashSet<>();
 }

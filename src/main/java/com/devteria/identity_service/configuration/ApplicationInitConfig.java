@@ -1,23 +1,25 @@
 package com.devteria.identity_service.configuration;
 
-import com.devteria.identity_service.entity.UserEntity;
-import com.devteria.identity_service.enums.Role;
-import com.devteria.identity_service.repository.PermissionRepository;
-import com.devteria.identity_service.repository.RoleRepository;
-import com.devteria.identity_service.repository.UserRepository;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.devteria.identity_service.entity.RoleEntity;
+import com.devteria.identity_service.entity.UserEntity;
+import com.devteria.identity_service.enums.Role;
+import com.devteria.identity_service.exception.AppException;
+import com.devteria.identity_service.exception.ErrorCode;
+import com.devteria.identity_service.repository.RoleRepository;
+import com.devteria.identity_service.repository.UserRepository;
 
-import java.util.HashSet;
-import java.util.Set;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @RequiredArgsConstructor
@@ -27,14 +29,16 @@ public class ApplicationInitConfig {
     PasswordEncoder passwordEncoder;
     RoleRepository roleRepository;
 
-    //Khởi tạo user Admin
+    // Khởi tạo user Admin
     @Bean
     ApplicationRunner applicationRunner(UserRepository userRepository) {
         return args -> {
             // Nếu ứng dụng lần đầu khởi động, chưa có admin thì tạo mới 1 admin
             if (userRepository.findByUsername("admin").isEmpty()) {
                 Set<RoleEntity> roles = new HashSet<>();
-                roles.add(roleRepository.findById(Role.ADMIN.name()).orElseThrow());
+                roles.add(roleRepository
+                        .findById(Role.ADMIN.name())
+                        .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTS)));
                 UserEntity userEntity = UserEntity.builder()
                         .username("admin")
                         .password(passwordEncoder.encode("admin123456"))

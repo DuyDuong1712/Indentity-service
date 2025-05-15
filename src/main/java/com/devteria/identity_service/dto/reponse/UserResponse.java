@@ -1,11 +1,10 @@
 package com.devteria.identity_service.dto.reponse;
 
-import com.devteria.identity_service.entity.RoleEntity;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
 import java.time.LocalDate;
 import java.util.Set;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
 @NoArgsConstructor
@@ -18,5 +17,5 @@ public class UserResponse {
     String firstName;
     String lastName;
     LocalDate dob;
-    Set<RoleEntity> roleEntities;
+    Set<RoleReponse> roles;
 }

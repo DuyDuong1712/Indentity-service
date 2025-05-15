@@ -1,9 +1,27 @@
 package com.devteria.identity_service.service;
 
+import java.text.ParseException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.UUID;
+
+import com.devteria.identity_service.dto.request.LogoutRequest;
+import com.devteria.identity_service.entity.InvalidatedToken;
+import com.devteria.identity_service.repository.InvalidatedTokenRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
 import com.devteria.identity_service.dto.reponse.AuthenticationResponse;
 import com.devteria.identity_service.dto.reponse.IntrospectReponse;
 import com.devteria.identity_service.dto.request.AuthenticationRequest;
 import com.devteria.identity_service.dto.request.IntrospectRequest;
+import com.devteria.identity_service.entity.RoleEntity;
 import com.devteria.identity_service.entity.UserEntity;
 import com.devteria.identity_service.exception.AppException;
 import com.devteria.identity_service.exception.ErrorCode;
@@ -13,22 +31,12 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
-import java.text.ParseException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.StringJoiner;
 
 @Slf4j
 @Service
@@ -36,16 +44,33 @@ import java.util.StringJoiner;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationService {
     UserRepository userRepository;
+    InvalidatedTokenRepository invalidatedTokenRepository;
 
     @NonFinal
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
 
-//    protected static final String SIGNER_KEY = "eDvTlohzG6dHiJU9GdHzVGBq3T9b/UaLG9yqif0EuejdhEFOCuV4YHBIQjSNLG5Z";
+    //    protected static final String SIGNER_KEY = "eDvTlohzG6dHiJU9GdHzVGBq3T9b/UaLG9yqif0EuejdhEFOCuV4YHBIQjSNLG5Z";
+
+    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+        var signToken = verifyToken(request.getToken());
+
+        String jit = signToken.getJWTClaimsSet().getJWTID();
+        Date expirationTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(expirationTime)
+                .build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
+    }
 
     // Xác thực người dùng
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        UserEntity userEntity = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS) );
+        UserEntity userEntity = userRepository
+                .findByUsername(request.getUsername())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         boolean authenticated = passwordEncoder.matches(request.getPassword(), userEntity.getPassword());
@@ -57,31 +82,35 @@ public class AuthenticationService {
         // Tạo JWT token
         String token = generateToken(userEntity);
 
-        return AuthenticationResponse.builder()
-                .token(token)
-                .authenticated(true)
-                .build();
+        return AuthenticationResponse.builder().token(token).authenticated(true).build();
     }
 
-    //Xác thực token:  kiểm tra xem token có hợp lệ và còn hạn hay không.
+    // Xác thực token:  kiểm tra xem token có hợp lệ và còn hạn hay không.
     public IntrospectReponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         String token = request.getToken();
 
-        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+//        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+//
+//        SignedJWT signedJWT = SignedJWT.parse(token);
+//
+//        Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+//
+//        boolean verified = signedJWT.verify(verifier);
 
-        SignedJWT signedJWT = SignedJWT.parse(token);
+        boolean isValid = true;
 
-        Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-
-        boolean verified = signedJWT.verify(verifier);
+        try {
+            verifyToken(token);
+        } catch (AppException exception) {
+            isValid = false;
+        }
 
         return IntrospectReponse.builder()
-                        .valid(verified && expirationTime.after(new Date()))
-                        .build();
+                .valid(isValid)
+                .build();
     }
 
-
-    //JwtService nên nằm ở JwtService
+    // JwtService nên nằm ở JwtService
     private String generateToken(UserEntity userEntity) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
@@ -90,6 +119,7 @@ public class AuthenticationService {
                 .issuer("devteria.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
+                .jwtID(UUID.randomUUID().toString())
                 .claim("scope", buildScope(userEntity))
                 .build();
 
@@ -97,7 +127,7 @@ public class AuthenticationService {
 
         JWSObject jwsObject = new JWSObject(header, payload);
 
-        //Ký token
+        // Ký token
         try {
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
             return jwsObject.serialize();
@@ -107,13 +137,42 @@ public class AuthenticationService {
         }
     }
 
-    //JwtService
+    // JwtService
     private String buildScope(UserEntity userEntity) {
         StringJoiner joiner = new StringJoiner(" ");
         if (!CollectionUtils.isEmpty(userEntity.getRoles())) {
-//            userEntity.getRoleEntities().forEach(joiner::add);
+            Set<RoleEntity> roles = userEntity.getRoles();
+            userEntity.getRoles().forEach(roleEntity -> {
+                joiner.add("ROLE_" + roleEntity.getCode());
+                if (!CollectionUtils.isEmpty(roleEntity.getPermissions())) {
+                    roleEntity.getPermissions().forEach(permissionEntity -> {
+                        joiner.add(permissionEntity.getCode());
+                    });
+                }
+            });
         }
 
         return joiner.toString();
+    }
+
+    private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+
+        SignedJWT signedJWT = SignedJWT.parse(token);
+
+        Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        boolean verified = signedJWT.verify(verifier);
+
+        if (!(verified && expirationTime.after(new Date()))) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        // Nếu token tồn tại trong bảng InvalidateToken
+        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        return signedJWT;
     }
 }

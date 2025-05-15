@@ -1,13 +1,11 @@
 package com.devteria.identity_service.mapper;
 
-import com.devteria.identity_service.dto.reponse.PermissionReponse;
-import com.devteria.identity_service.dto.reponse.RoleReponse;
-import com.devteria.identity_service.dto.request.PermissionRequest;
-import com.devteria.identity_service.dto.request.RoleRequest;
-import com.devteria.identity_service.entity.PermissionEntity;
-import com.devteria.identity_service.entity.RoleEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+
+import com.devteria.identity_service.dto.reponse.RoleReponse;
+import com.devteria.identity_service.dto.request.RoleRequest;
+import com.devteria.identity_service.entity.RoleEntity;
 
 @Mapper(componentModel = "spring")
 public interface RoleMapper {
@@ -15,7 +13,6 @@ public interface RoleMapper {
     RoleEntity toRoleEntity(RoleRequest request);
 
     RoleReponse toRoleResponse(RoleEntity roleEntity);
-//    void updatePermission(@MappingTarget Permission permission, UserUpdateRequest request);
-
+    //    void updatePermission(@MappingTarget Permission permission, UserUpdateRequest request);
 
 }
