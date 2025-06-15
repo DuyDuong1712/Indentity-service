@@ -5,9 +5,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/identity_service
+    url: jdbc:mysql://root:fQaaecQnvyXKcscxZmpIbPjnkQDyaqgd@ballast.proxy.rlwy.net:26210/railway
     username: root
-    password: Chiduy171203
+    password: fQaaecQnvyXKcscxZmpIbPjnkQDyaqgd
 
   jpa:
     hibernate:
