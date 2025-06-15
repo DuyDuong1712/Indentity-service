@@ -1,21 +1,18 @@
 package com.devteria.identity_service.validator;
 
-import jakarta.validation.Constraint;
-import jakarta.validation.Payload;
-import jakarta.validation.constraints.Size;
-
-import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+
 @Target({ElementType.FIELD}) // Áp dụng cho field
-@Retention(RetentionPolicy.RUNTIME) //Xử lý lúc runtime
+@Retention(RetentionPolicy.RUNTIME) // Xử lý lúc runtime
 @Constraint(
         validatedBy = {DobValidator.class} // Liên kết với class validator
-)
+        )
 public @interface DobContraint {
     String message() default "Invalid date of birth";
 

@@ -2,8 +2,9 @@ package com.devteria.identity_service.dto.request;
 
 import java.time.LocalDate;
 
-import com.devteria.identity_service.validator.DobContraint;
 import jakarta.validation.constraints.Size;
+
+import com.devteria.identity_service.validator.DobContraint;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -22,6 +23,7 @@ public class UserCreationRequest {
 
     String firstName;
     String lastName;
+
     @DobContraint(min = 15, message = "INVALID_DOB")
     LocalDate dob;
 }

@@ -1,7 +1,5 @@
 package com.devteria.identity_service.configuration;
 
-import javax.crypto.spec.SecretKeySpec;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -13,9 +11,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -24,7 +19,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    private final String[] PUBLIC_ENDPOINTS = {"/users", "/auth/login", "/auth/introspect", "/auth/logout"};
+    private final String[] PUBLIC_ENDPOINTS = {
+        "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh"
+    };
 
     @Value("${jwt.signerKey}")
     private String signerKey;
@@ -63,24 +60,25 @@ public class SecurityConfig {
         // spotless:on
     }
 
-//    @Bean
-//    public JwtDecoder jwtDecoder() {
-//        // kiểm tra chữ ký (signature) của token để đảm bảo token hợp lệ.
-//
-//        SecretKeySpec secretKey = new SecretKeySpec(signerKey.getBytes(), "HS512");
-//
-//        NimbusJwtDecoder nimbusJwtDecoder = NimbusJwtDecoder.withSecretKey(secretKey)
-//                .macAlgorithm(MacAlgorithm.HS512)
-//                .build();
-//
-//        return nimbusJwtDecoder;
-//    }
+    //    @Bean
+    //    public JwtDecoder jwtDecoder() {
+    //        // kiểm tra chữ ký (signature) của token để đảm bảo token hợp lệ.
+    //
+    //        SecretKeySpec secretKey = new SecretKeySpec(signerKey.getBytes(), "HS512");
+    //
+    //        NimbusJwtDecoder nimbusJwtDecoder = NimbusJwtDecoder.withSecretKey(secretKey)
+    //                .macAlgorithm(MacAlgorithm.HS512)
+    //                .build();
+    //
+    //        return nimbusJwtDecoder;
+    //    }
 
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         // ánh xạ claim trong JWT thành quyền (authority).
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-//        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_"); đã cấu hình thêm ROLE_ trong AuthenticationService
+        //        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_"); đã cấu hình thêm ROLE_ trong
+        // AuthenticationService
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();

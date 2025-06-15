@@ -1,8 +1,10 @@
 package com.devteria.identity_service.exception;
 
+import java.util.Map;
+import java.util.Objects;
+
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.constraints.Min;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,9 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.devteria.identity_service.dto.reponse.ApiResponse;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @ControllerAdvice
@@ -42,8 +42,7 @@ public class GlobalExceptionHandler {
         try {
             errorCode = ErrorCode.valueOf(enumKey);
 
-            var constraintViolation =
-                    e.getBindingResult().getAllErrors().get(0).unwrap(ConstraintViolation.class);
+            var constraintViolation = e.getBindingResult().getAllErrors().get(0).unwrap(ConstraintViolation.class);
 
             attributes = constraintViolation.getConstraintDescriptor().getAttributes();
 
@@ -53,11 +52,13 @@ public class GlobalExceptionHandler {
 
         }
 
-
         ApiResponse apiResponse = new ApiResponse();
 
         apiResponse.setCode(errorCode.getCode());
-        apiResponse.setMessage(Objects.nonNull(attributes) ? mapAttribute(errorCode.getMessage(), attributes) : errorCode.getMessage());
+        apiResponse.setMessage(
+                Objects.nonNull(attributes)
+                        ? mapAttribute(errorCode.getMessage(), attributes)
+                        : errorCode.getMessage());
 
         return ResponseEntity.status(errorCode.getHttpStatusCode()).body(apiResponse);
     }

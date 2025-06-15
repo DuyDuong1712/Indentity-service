@@ -2,7 +2,6 @@ package com.devteria.identity_service.controller;
 
 import java.text.ParseException;
 
-import com.devteria.identity_service.dto.request.LogoutRequest;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +12,8 @@ import com.devteria.identity_service.dto.reponse.AuthenticationResponse;
 import com.devteria.identity_service.dto.reponse.IntrospectReponse;
 import com.devteria.identity_service.dto.request.AuthenticationRequest;
 import com.devteria.identity_service.dto.request.IntrospectRequest;
+import com.devteria.identity_service.dto.request.LogoutRequest;
+import com.devteria.identity_service.dto.request.RefreshRequest;
 import com.devteria.identity_service.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 
@@ -37,6 +38,13 @@ public class AuthenticationController {
     public ApiResponse<Void> logout(@RequestBody LogoutRequest logoutRequest) throws ParseException, JOSEException {
         authenticationService.logout(logoutRequest);
         return ApiResponse.<Void>builder().build();
+    }
+
+    @PostMapping("/refresh")
+    public ApiResponse<AuthenticationResponse> logout(@RequestBody RefreshRequest refreshRequest)
+            throws ParseException, JOSEException {
+        AuthenticationResponse result = authenticationService.refreshToken(refreshRequest);
+        return ApiResponse.<AuthenticationResponse>builder().result(result).build();
     }
 
     @PostMapping("/introspect")

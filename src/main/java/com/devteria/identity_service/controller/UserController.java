@@ -47,7 +47,7 @@ public class UserController {
         // Lấy thông tin đang ddang nhập hiện tại
         //        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         //
-        //        log.info("username: {}", authentication.getName());
+        //        log.info("username: {}", );
         //        authentication.getAuthorities().stream().forEach(grantedAuthority ->
         // log.info(grantedAuthority.getAuthority()));
 
